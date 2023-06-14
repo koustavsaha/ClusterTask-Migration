@@ -1,9 +1,9 @@
 # Blog: Migration from ClusterTasks to Tekton Resolvers in Openshift Pipelines 
 
 Publish date: ASAP, not tied to a launch date
-# Author: 
-# Koustav Saha 
-# Vincent Demeester 
+#### Author: 
+##### Koustav Saha 
+##### Vincent Demeester 
 
 ## What are ClusterTasks: 
 ClusterTasks are CRDs that Openshift Pipeline provides that are the cluster-scoped equivalent of a Task. They share all of the same fields as a Task but can be referenced regardless of the namespace that a TaskRun is executing in. By contrast a Task can only be referred to by a TaskRun in the same namespace. 
@@ -138,7 +138,7 @@ This can again be a replacement for ClusterTasks where the tasks can be maintain
 
 Continuing with the previous example, let us consider a scenario where the task YAML file is hosted within a designated location, such as the URL "https://github.com/tektoncd/catalog," specifically under the path "task/generate-random-number/." Moreover, the task is maintained with different versions, for instance, the version "0.6/generate-random-number.yaml." Consequently, it becomes possible to reference a specific version of the task within the pipeline, thus ensuring precise task execution based on the desired version.
 
-
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -158,20 +158,17 @@ spec:
   results:
   - name: random-number
     value: $(tasks.generate-random-number.outputs.result)
-
-
-
-
+```
 
 In addition, the Git resolver can be utilized to reference pipelines, further expanding its functionality. By employing the Git resolver, users gain the flexibility to organize their desired tasks and pipelines in a manner that ensures availability throughout the cluster, while simultaneously minimizing replication efforts. Additionally, leveraging the security features offered by Git, such as Role-Based Access Control (RBAC), enhances the overall security posture of the pipelines.
 At present, the Git resolver is compatible with the following platforms:
-github.com and GitHub Enterprise
-gitlab.com and self-hosted GitLab instances
-Gitea
-BitBucket Server
-BitBucket Cloud
+- github.com and GitHub Enterprise
+- gitlab.com and self-hosted GitLab instances
+- Gitea
+- BitBucket Server
+- BitBucket Cloud
 
-Bundles Resolver: 
+### Bundles Resolver: 
 
 A bundles resolver is a feature in Tekton Pipelines that allows you to reference Tekton resources from a Tekton bundle image. A Tekton bundle is a collection of Tekton resources that are packaged together and can be deployed as a single unit. Bundles can be used to share Tekton resources with others, or to make it easier to deploy Tekton resources in a consistent way.
 Moreover, Tekton bundles are built on top of the OCI image format. This means that bundles can be stored and distributed in any OCI registry, such as Docker Hub or Quay.io.
@@ -180,13 +177,13 @@ This can again be a replacement for ClusterTasks where you first create and push
 
 Continuing with the example, , 
 First you need to create and push the bundle to a registry e.g. docker with proper tagging which will help in maintaining the task. 
-
+```bash
 ​​tkn bundle push docker.io/myorg/mybundle:1.0 -f path/to/my/generate-random-number.yaml
-
+```
 
 Then you can use this image in a pipeline with bundles resolver. 
 
-
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -206,14 +203,11 @@ spec:
   results:
   - name: random-number
     value: $(tasks.generate-random-number.outputs.result)
-
-
-
-
+```
 Currently there is a limitation of no more than 10 individual layers (Pipelines and/or Tasks) can be placed in a single image. However, we do recommend to use a single image per task/pipeline to reap the benefits of versioning, tagging and security. 
 
 
-Hub Resolver: 
+### Hub Resolver: 
 
 A hub resolver in Tekton is a component that is used to resolve Tekton resources from the Tekton Hub or Artifact Hub. The Tekton Hub/Artifact Hub is a collection of Tekton resources, such as tasks and pipelines. The hub resolver can be used to pull in resources from the Tekton Hub and use them in your own Tekton pipelines.
 
@@ -222,13 +216,12 @@ By default, the hub resolver supports the public endpoint of Tekton Hub/Artifact
 You can use the hub resolver to replace cluster tasks. To do this, you need to host your tasks in your own Tekton Hub/Artifact Hub instance and then refer to those objects using the hub resolver. Hosting your tasks in a hub instance will make it easier for you to maintain and search for them using the hub UI, making them easier for other teams to consume.
 
 Following the previous example: 
+- Create a git repository and add your tasks to it.
+- Deploy your own hub instance using the instructions here.
+- Set the ARTIFACT_HUB_API or TEKTON_HUB_API environment variable to the URL of your hub instance.
+- Use the hub resolver to refer to your tasks in your Tekton pipelines.
 
-Create a git repository and add your tasks to it.
-Deploy your own hub instance using the instructions here.
-Set the ARTIFACT_HUB_API or TEKTON_HUB_API environment variable to the URL of your hub instance.
-Use the hub resolver to refer to your tasks in your Tekton pipelines.
-
-
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -246,22 +239,25 @@ spec:
   results:
   - name: random-number
     value: $(tasks.generate-random-number.outputs.result)
+```
 
+### Custom Resolvers
 
-
-
-Custom Resolvers
 If none of the built-in resolvers “fit”, you can create your own, in any language. Tekton provides an easy way to create one in the form of a go framework/library.
 
 The approach is similar to the way the Tekton controller is written, but in a more simple fashion. In a gist, a resolver watches the ResolutionRequest object, and picks up the one that belong to itself (through the name of the resolver, like “hub”, “git”, …). From there it will get a set of parameters and the contract is that it should return either a valid Task or Pipeline, in a relatively short period of time. This can be used to generate dynamic Task or Pipeline based of some template and parameters.
 
 This is documented in more detail in upstream docs : How to write a Resolver.
-Conclusion: 
+
+
+## Conclusion: 
 All resolvers offer viable alternatives to ClusterTasks, with unique capabilities and limitations.
-Cluster resolver follows a K8s native approach that provides additional benefits compared to ClusterTasks, such as k8s RBAC and storage. However, it does not address task maintenance, version management, or task trust.
-Git resolver is valuable for task organization, versioning, and trust management. It reduces replication efforts and enhances security through git’s own RBAC.
-Bundle resolver offers best security benefits through OCI, such as image signing and content trust. It provides scalability and reliability advantages offered by OCI registries. 
-Hub resolver additionally reaps the benefits of easy searching and filtering of tasks using hub UI.
+
+- Cluster resolver follows a K8s native approach that provides additional benefits compared to ClusterTasks, such as k8s RBAC and storage. However, it does not address task maintenance, version management, or task trust.
+- Git resolver is valuable for task organization, versioning, and trust management. It reduces replication efforts and enhances security through git’s own RBAC.
+- Bundle resolver offers best security benefits through OCI, such as image signing and content trust. It provides scalability and reliability advantages offered by OCI registries. 
+- Hub resolver additionally reaps the benefits of easy searching and filtering of tasks using hub UI.
+
 The choice of resolver depends on the specific use case and deployment model of cluster tasks. Factors such as task organization, version management, trust, collaboration, and maintenance will help determine the most suitable resolver for your needs.
 
 
