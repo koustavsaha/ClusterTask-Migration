@@ -1,17 +1,16 @@
-#Blog: Migration from ClusterTasks to Tekton Resolvers in Openshift Pipelines 
+# Blog: Migration from ClusterTasks to Tekton Resolvers in Openshift Pipelines 
 
 Publish date: ASAP, not tied to a launch date
-Author: 
-Koustav Saha 
-Vincent Demeester 
+# Author: 
+# Koustav Saha 
+# Vincent Demeester 
 
-What are ClusterTasks: 
+## What are ClusterTasks: 
 ClusterTasks are CRDs that Openshift Pipeline provides that are the cluster-scoped equivalent of a Task. They share all of the same fields as a Task but can be referenced regardless of the namespace that a TaskRun is executing in. By contrast a Task can only be referred to by a TaskRun in the same namespace. 
-
 Openshift Pipelines ships with various default cluster tasks like git clone, buildah, etc. Additionally users can create their own ClusterTasks by creating a Task object with the kind field set to ClusterTask. 
-
 See the below example of a ClusterTask and how it is getting used in pipelines. We will use this same task to show how you can migrate from ClusterTask using various resolvers. 
 
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: ClusterTask
 metadata:
@@ -31,15 +30,17 @@ spec:
   outputs:
     result:
       type: string
-
+```
 
 You install the ClusterTask in your openshift cluster 
 
+```bash
 oc create -f path/to/my/generate-random-number.yaml
-
+```
 
 Once you have installed a cluster task, you can use it in a pipeline in any namespace by specifying the taskRef field in the tasks section of the pipeline definition. 
 
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -53,24 +54,28 @@ spec:
   results:
   - name: random-number
     value: $(tasks.generate-random-number.outputs.result)
+```
 
+## Why is ClusterTask getting deprecated ? 
 
-Why is ClusterTask getting deprecated ? 
 There are a few reasons why cluster tasks are not widely used. 
-First, cluster tasks can be difficult to manage. They are not namespaced, so they can be overwritten by other cluster tasks. Additionally there is no built in versioning, hence if someone updates a ClusterTask in a non-backward compatible way, it will break any usage of it that didn't take this change into account.
-Second, they are not necessary for most use cases. Tekton Pipelines are run in a single namespace, so there is no need for a cluster-scoped Task. 
-Third, cluster tasks are not as secure as namespaced tasks. They can be accessed by any user in the cluster, even if they do not have access to the namespace where the TaskRun is running.
+- First, cluster tasks can be difficult to manage. They are not namespaced, so they can be overwritten by other cluster tasks. Additionally there is no built in versioning, hence if someone updates a ClusterTask in a non-backward compatible way, it will break any usage of it that didn't take this change into account.
+- Second, they are not necessary for most use cases. Tekton Pipelines are run in a single namespace, so there is no need for a cluster-scoped Task. 
+- Third, cluster tasks are not as secure as namespaced tasks. They can be accessed by any user in the cluster, even if they do not have access to the namespace where the TaskRun is running.
 
-Ways to migrate from ClusterTask
+## Ways to migrate from ClusterTask
+
 The resolver feature in Tekton serves as an alternative to ClusterTask in the context of Openshift Pipelines. It has been introduced as a Generally Available (GA) feature starting from Openshift Pipelines 1.11. The Tekton Resolver is designed as a robust and extensible tool that enables users to resolve resources from remote locations, encompassing Git repositories, cloud buckets, and other storage systems. Implementation-wise, the Resolver is realized as a Kubernetes Custom Resource Definition (CRD), which ensures its compatibility and deployability across diverse Kubernetes clusters.
 
 The Tekton Resolver offers a range of built-in resolvers, which are Git Resolver, Bundle Resolver, Cluster Resolver, and Hub Resolver. Each resolver comes with its own distinct capabilities and limitations. In the subsequent section, we will delve into the details of these resolvers and explore how they can effectively replace ClusterTasks. To illustrate these concepts, we will continue utilizing the aforementioned example mentioned earlier.
 
-Cluster Resolver: 
+### Cluster Resolver: 
+
 A cluster resolver is a Tekton Pipelines feature that allows you to reference tasks and pipelines from other namespaces. This can be a replacement for ClusterTasks, you can add the tasks that you want to be available across the cluster in one or multiple namespace. TheseThis namespaces will allow an admin to create and maintain tasks that you were previously using as ClusterTasks. Thus by consolidating the desired tasks in designated namespaces, which assumes an administrative role, organizations can ensure enhanced security measures. Specifically, only the administrator of this namespace possesses the necessary privileges to modify or delete the tasks that are made available throughout the cluster. Additionally, you can block some namespaces to resolve tasks/pipelines from. 
 
 Following the previous example mentioned in the ClusterTasks section, you can create the task in let’s say example namespace as a regular task object. 
 
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
@@ -90,14 +95,17 @@ spec:
   outputs:
     result:
       type: string
-
+```
 
 You install the task manifest in openshift cluster in example namespace 
 
+```bash
 oc create -f path/to/my/generate-random-number.yaml -n example 
+```
 
 The you can use refer this task in a pipeline in any namespace like below - 
 
+```YAML
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -117,13 +125,12 @@ spec:
   results:
   - name: random-number
     value: $(tasks.generate-random-number.outputs.result)
-
-
-
+```
 
 Additionally, you can also use the cluster resolver to reference pipelines. To do this, you need to set the kind parameter to pipeline. 
 Thus, the cluster resolver is a powerful feature that allows you to share tasks and pipelines across namespaces. This can make it easier to manage your pipelines and tasks, and it can also help you to improve the security and performance of your workloads. However, the shortcoming of this approach currently is that a user might not have the right to list the task and pipeline in the namespace that the resolvers looks into, making "discoverability" hard.
-Git Resolver: 
+
+### Git Resolver: 
 
 A Git resolver is a Tekton Pipelines feature that allows you to reference tasks and pipelines from Git repositories. This can be useful for storing your tasks and pipelines in a central location, such as GitHub, and then referencing them from your pipelines. The git resolver has two modes: cloning a repository anonymously (public repositories only), or fetching individual files via an SCM provider’s API using an API token. The private repositories and API token can be set inside git-resolver-config from openshift pipelines operator. 
 
