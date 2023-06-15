@@ -1,9 +1,9 @@
-# Blog: Migration from ClusterTasks to Tekton Resolvers in Openshift Pipelines 
+# Migration from ```ClusterTasks``` to Tekton ```Resolvers``` in Openshift Pipelines 
 
 Publish date: ASAP, not tied to a launch date
 #### Author: 
-##### Koustav Saha 
-##### Vincent Demeester 
+Koustav Saha 
+Vincent Demeester 
 
 ## What are ```ClusterTasks```: 
 ```ClusterTasks``` are CRDs that Openshift Pipeline provides that are the cluster-scoped equivalent of a Task. They share all of the same fields as a ```Task``` but can be referenced regardless of the namespace that a ```TaskRun``` is executing in. By contrast a ```Task``` can only be referred to by a ```TaskRun``` in the same namespace. 
