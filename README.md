@@ -5,7 +5,7 @@ Publish date: ASAP, not tied to a launch date
 ##### Koustav Saha 
 ##### Vincent Demeester 
 
-## What are ClusterTasks: 
+## What are ```ClusterTasks```: 
 ClusterTasks are CRDs that Openshift Pipeline provides that are the cluster-scoped equivalent of a Task. They share all of the same fields as a Task but can be referenced regardless of the namespace that a TaskRun is executing in. By contrast a Task can only be referred to by a TaskRun in the same namespace. 
 Openshift Pipelines ships with various default cluster tasks like git clone, buildah, etc. Additionally users can create their own ClusterTasks by creating a Task object with the kind field set to ClusterTask. 
 See the below example of a ClusterTask and how it is getting used in pipelines. We will use this same task to show how you can migrate from ClusterTask using various resolvers. 
@@ -69,7 +69,7 @@ The resolver feature in Tekton serves as an alternative to ClusterTask in the co
 
 The Tekton Resolver offers a range of built-in resolvers, which are Git Resolver, Bundle Resolver, Cluster Resolver, and Hub Resolver. Each resolver comes with its own distinct capabilities and limitations. In the subsequent section, we will delve into the details of these resolvers and explore how they can effectively replace ClusterTasks. To illustrate these concepts, we will continue utilizing the aforementioned example mentioned earlier.
 
-### Cluster Resolver: 
+### [Cluster Resolver][https://tekton.dev/docs/pipelines/cluster-resolver/]: 
 
 A cluster resolver is a Tekton Pipelines feature that allows you to reference tasks and pipelines from other namespaces. This can be a replacement for ClusterTasks, you can add the tasks that you want to be available across the cluster in one or multiple namespace. TheseThis namespaces will allow an admin to create and maintain tasks that you were previously using as ClusterTasks. Thus by consolidating the desired tasks in designated namespaces, which assumes an administrative role, organizations can ensure enhanced security measures. Specifically, only the administrator of this namespace possesses the necessary privileges to modify or delete the tasks that are made available throughout the cluster. Additionally, you can block some namespaces to resolve tasks/pipelines from. 
 
@@ -130,7 +130,7 @@ spec:
 Additionally, you can also use the cluster resolver to reference pipelines. To do this, you need to set the kind parameter to pipeline. 
 Thus, the cluster resolver is a powerful feature that allows you to share tasks and pipelines across namespaces. This can make it easier to manage your pipelines and tasks, and it can also help you to improve the security and performance of your workloads. However, the shortcoming of this approach currently is that a user might not have the right to list the task and pipeline in the namespace that the resolvers looks into, making "discoverability" hard.
 
-### Git Resolver: 
+### [Git Resolver][https://tekton.dev/docs/pipelines/git-resolver/]: 
 
 A Git resolver is a Tekton Pipelines feature that allows you to reference tasks and pipelines from Git repositories. This can be useful for storing your tasks and pipelines in a central location, such as GitHub, and then referencing them from your pipelines. The git resolver has two modes: cloning a repository anonymously (public repositories only), or fetching individual files via an SCM provider’s API using an API token. The private repositories and API token can be set inside git-resolver-config from openshift pipelines operator. 
 
@@ -168,7 +168,7 @@ At present, the Git resolver is compatible with the following platforms:
 - BitBucket Server
 - BitBucket Cloud
 
-### Bundles Resolver: 
+### [Bundles Resolver][https://tekton.dev/docs/pipelines/bundle-resolver/]: 
 
 A bundles resolver is a feature in Tekton Pipelines that allows you to reference Tekton resources from a Tekton bundle image. A Tekton bundle is a collection of Tekton resources that are packaged together and can be deployed as a single unit. Bundles can be used to share Tekton resources with others, or to make it easier to deploy Tekton resources in a consistent way.
 Moreover, Tekton bundles are built on top of the OCI image format. This means that bundles can be stored and distributed in any OCI registry, such as Docker Hub or Quay.io.
@@ -207,7 +207,7 @@ spec:
 Currently there is a limitation of no more than 10 individual layers (Pipelines and/or Tasks) can be placed in a single image. However, we do recommend to use a single image per task/pipeline to reap the benefits of versioning, tagging and security. 
 
 
-### Hub Resolver: 
+### [Hub Resolver][https://tekton.dev/docs/pipelines/hub-resolver/]: 
 
 A hub resolver in Tekton is a component that is used to resolve Tekton resources from the Tekton Hub or Artifact Hub. The Tekton Hub/Artifact Hub is a collection of Tekton resources, such as tasks and pipelines. The hub resolver can be used to pull in resources from the Tekton Hub and use them in your own Tekton pipelines.
 
@@ -217,7 +217,7 @@ You can use the hub resolver to replace cluster tasks. To do this, you need to h
 
 Following the previous example: 
 - Create a git repository and add your tasks to it.
-- Deploy your own hub instance using the instructions here.
+- Deploy your own hub instance using the instructions [here][https://github.com/tektoncd/hub/blob/main/docs/DEPLOYMENT.md].
 - Set the ARTIFACT_HUB_API or TEKTON_HUB_API environment variable to the URL of your hub instance.
 - Use the hub resolver to refer to your tasks in your Tekton pipelines.
 
@@ -247,7 +247,7 @@ If none of the built-in resolvers “fit”, you can create your own, in any lan
 
 The approach is similar to the way the Tekton controller is written, but in a more simple fashion. In a gist, a resolver watches the ResolutionRequest object, and picks up the one that belong to itself (through the name of the resolver, like “hub”, “git”, …). From there it will get a set of parameters and the contract is that it should return either a valid Task or Pipeline, in a relatively short period of time. This can be used to generate dynamic Task or Pipeline based of some template and parameters.
 
-This is documented in more detail in upstream docs : How to write a Resolver.
+This is documented in more detail in upstream docs : [How to write a Resolver][https://tekton.dev/docs/pipelines/how-to-write-a-resolver/].
 
 
 ## Conclusion: 
