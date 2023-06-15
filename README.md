@@ -2,7 +2,7 @@
 
 Publish date: ASAP, not tied to a launch date
 #### Author: 
-Koustav Saha 
+Koustav Saha,  
 Vincent Demeester 
 
 ## What are ```ClusterTasks```: 
