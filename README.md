@@ -1,6 +1,5 @@
 # Migration from ```ClusterTasks``` to Tekton ```Resolvers``` in Openshift Pipelines 
 
-Publish date: ASAP, not tied to a launch date
 #### Author: 
 Koustav Saha,  
 Vincent Demeester 
