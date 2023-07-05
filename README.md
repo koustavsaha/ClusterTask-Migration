@@ -262,3 +262,4 @@ The choice of resolver depends on the specific use case and deployment model of 
 
 
 
+```yaml apiVersion: tekton.dev/v1beta1 kind: Task metadata: name: mytask spec: steps: - name: writesomething image: ubuntu command: ["bash", "-c"] args: ["echo 'foo' > /my-cache/bar"] volumeMounts: - name: my-cache mountPath: /my-cache --- apiVersion: tekton.dev/v1beta1 kind: Pipeline metadata: name: mypipeline spec: tasks: - name: task1 taskRef: name: mytask --- apiVersion: tekton.dev/v1beta1 kind: PipelineRun metadata: name: mypipelinerun spec: pipelineRef: name: mypipeline podTemplate: securityContext: runAsNonRoot: true runAsUser: 1001 volumes: - name: my-cache persistentVolumeClaim: claimName: my-volume-claim ```
